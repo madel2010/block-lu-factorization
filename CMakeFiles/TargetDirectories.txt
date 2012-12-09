@@ -1,0 +1,2 @@
+/home/spider/C++_projects/BlockKLU/CMakeFiles/blockklu.dir
+/home/spider/C++_projects/BlockKLU/CMakeFiles/suitesparse.dir
