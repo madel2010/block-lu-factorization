@@ -1,0 +1,2 @@
+/usr/bin/ar cr libBlockKLu.a  CMakeFiles/BlockKLu.dir/MatrixBase.cpp.o
+/usr/bin/ranlib libBlockKLu.a
