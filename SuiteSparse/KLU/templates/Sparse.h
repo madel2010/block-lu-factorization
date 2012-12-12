@@ -6,6 +6,11 @@
 #include <list>
 #include <functional>
 #include <algorithm>
+#include <vector>
+
+#include <iostream>
+#include <fstream>
+#include <boost/algorithm/string.hpp>
 
 #include "MWrap.h"
 #include "klu.h"
@@ -170,8 +175,26 @@ public:
 		return new Sparse<T>(*this);
 	}
 	
+	void create(int m, int n){ 
+		this->rows=m; //Number of rows
+		this->cols=n; //Number of cols
+	  
+		cols_lists = new std::list<SparseElement>[n];
+	  
+		Ap = new int[n+1]; //We know that Ap is always (columns_no+1)
+		Ai = NULL; //we still do not know the rows
+		Ax = NULL; //we still do not know the values
+		MWrap_Ax = NULL;
+		klu_defaults(&Common);
+	  
+		ccs_created = false;
+		calculated_LU = false;
+		calculated_Sparse_ordering = false;
+	  
+		nnz = 0;
+	}
+	
       ~Sparse(){
-	std::cout<<"calling destructor"<<std::endl;
 	delete[] Ap;
 	Ap=NULL;
 	delete[] Ai;
@@ -334,7 +357,9 @@ public:
       //get the number of non zeros entries
       int get_nnz(){ return nnz; }
       
-      void solve(BMatrix::Dense<T> RHS, const int Nrhs=1){
+      void solve(BMatrix::Dense<T>& RHS, const int Nrhs=1){
+	  
+	  create_ccs();
 	  create_MWrap();
 	  if(!calculated_Sparse_ordering){
 		Symbolic = klu_analyze(this->rows, Ap, Ai, &Common) ;
@@ -352,9 +377,8 @@ public:
 	  }
 	  
 	  //Now do the F/B substitution
-	  int result = klu_B_solve(Symbolic, Numeric, this->rows, Nrhs, MWrap_RHS, &Common);
-	  
-	  delete[] MWrap_RHS;
+	  int result = klu_B_solve(Symbolic, Numeric, this->rows, Nrhs, MWrap_RHS, &Common);	  
+
       }
       
       
@@ -620,8 +644,7 @@ public:
     			throw std::runtime_error("I can only handle subtraction of Sparse-Sparse");
   		}
 	}
-	  
-	    
+	     
      template<class U>
 	  friend std::ostream& operator << (std::ostream &out , Sparse<U>& B);
       protected:
@@ -653,6 +676,7 @@ template<class U> std::ostream& operator << (std::ostream &out , Sparse<U>& B){
       
       return out;
 } 
+
   
   
   
