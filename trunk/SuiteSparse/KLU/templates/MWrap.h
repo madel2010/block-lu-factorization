@@ -94,14 +94,14 @@ public:
 	};
 	
 	virtual MWrap<T>& operator=(DBase<T>* B){
-		if(!A){
-		    if (dynamic_cast<Dense<T>*>(B)){ 
-			A = new Dense<T>;
-		    }
+		//if(!A){
+		//    if (dynamic_cast<Dense<T>*>(B)){ 
+		//	A = new Dense<T>;
+		//    }
 		    
-		}
+		//}
 		
-		(*A) = (*B);
+		A = B;
 		return *this;
 		
 		
