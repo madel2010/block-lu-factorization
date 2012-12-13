@@ -359,7 +359,10 @@ times(&cstart);
 	  	  
 	  //Now do the F/B substitution
 	  int result = klu_solve(Symbolic, Numeric, this->rows, Nrhs, (*RHS), &Common);	  
-
+	  if(!result){
+		std::cerr<<"Cannot do F/B substitution";
+	  }
+	  
 times(&cend);
 double cpu_total = (cend.tms_utime - cstart.tms_utime)/ticks_per_second;
 std::cout<<"Total time using blocks= "<< cpu_total <<std::endl;

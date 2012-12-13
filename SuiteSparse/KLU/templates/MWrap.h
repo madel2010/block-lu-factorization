@@ -37,10 +37,10 @@ public:
   	~MWrap() { }
 	
 	void clear(){
-	      if(A){
-		  delete A;
-		  A = NULL;
-	      }
+	      //if(A){
+	      //	  delete A;
+	      //	  A = NULL;
+	      //}
 	}
 	//derefernce operator (*A)
 	virtual DBase<T>* operator* () const {return A;}

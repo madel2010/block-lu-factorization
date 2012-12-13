@@ -58,7 +58,7 @@ public:
 	virtual DBase<T>* operator*(const DBase<T> &B) const = 0;
 	
 	virtual DBase<T>* scale (T* val) const = 0;
-	virtual DBase<T>* solve(const DBase<T> &B) const = 0;
+	virtual DBase<T>* solve(const DBase<T> &B) = 0;
 	
 	~DBase(){
 	    if(data) delete[] data;
@@ -86,7 +86,7 @@ public:
 		this->rows=m;
 		this->cols=n;
 		this->data = new T[m*n];
-		this->LU_factors = new T[m*n];
+		this->LU_factors = NULL;
 		
 		have_LU_factors = false;
 	}
@@ -95,7 +95,7 @@ public:
 		this->rows=m;
 		this->cols=n;
 		this->data = _data;
-		this->LU_factors = new T[m*n];
+		this->LU_factors = NULL;
 		
 		have_LU_factors = false;
 	}
@@ -111,7 +111,7 @@ public:
 		    }  
 		}
 		
-		this->LU_factors = new T[this->rows*this->cols];
+		this->LU_factors = NULL;
 		have_LU_factors = false;
 	}
 
@@ -128,7 +128,7 @@ public:
 		this->rows=m;
 		this->cols=n;
 		this->data = new T[m*n];
-		this->LU_factors = new T[m*n];
+		this->LU_factors = NULL;
 		
 		have_LU_factors = false;
 	}
@@ -145,7 +145,7 @@ public:
 		    }  
 		}
 
-		this->LU_factors = new T[this->rows*this->cols];
+		this->LU_factors = NULL;
 		have_LU_factors = false;
 		
 		return *this;
@@ -230,15 +230,15 @@ public:
 		return true;
 	}
 
-	Dense<T> solve(T* RHS, const int Nrhs=1) const{
+	Dense<T> solve(T* RHS, const int Nrhs=1){
 		throw std::runtime_error("Sorry: Can only solve dense<double> matrices now.");
 	}
     
-	Dense<T> solve(const Dense<T>& _RHS) const{
+	Dense<T> solve(const Dense<T>& _RHS){
 		throw std::runtime_error("Sorry: Can only solve dense<double> matrices now.");
 	}
 	
-	DBase<T>* solve(const DBase<T> &B) const{
+	DBase<T>* solve(const DBase<T> &B){
 		throw std::runtime_error("Sorry: Can only solve dense<double> matrices now.");
 	}
 	
@@ -477,7 +477,7 @@ public:
 	}
 
 	//// this operator gives result = inv(A)*B
-	Dense<T> operator /(const Dense<T> &B) const{
+	Dense<T> operator /(const Dense<T> &B){
 		throw std::runtime_error("TODO: division on general dense matrices");
 	}
 	  
