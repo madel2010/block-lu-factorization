@@ -128,6 +128,10 @@ static void factor2
     /* factor each block using klu */
     /* ---------------------------------------------------------------------- */
 
+    #ifdef BLOCKM
+	Entry::start_stealing_data = true;
+    #endif
+
     for (block = 0 ; block < nblocks ; block++)
     {
 
@@ -150,7 +154,10 @@ static void factor2
             poff = Offp [k1] ;
             oldcol = Q [k1] ;
             pend = Ap [oldcol+1] ;
+	
+	    #ifndef BLOCKM
             CLEAR (s) ;
+	    #endif
 
             if (scale <= 0)
             {
@@ -290,6 +297,11 @@ static void factor2
             /* the local pivot row permutation Pblock is no longer needed */
         }
     }
+
+    #ifdef BLOCKM
+	Entry::start_stealing_data = false;
+    #endif
+
     ASSERT (nzoff == Offp [n]) ;
     PRINTF (("\n------------------- Off diagonal entries:\n")) ;
     ASSERT (KLU_valid (n, Offp, Offi, Offx)) ;
@@ -523,14 +535,19 @@ KLU_numeric *KLU_factor         /* returns NULL if error, or a valid            
      *
      *    n*sizeof(Entry) + max (6*maxblock*sizeof(Int), 3*n*sizeof(Entry))
      */
+#ifndef BLOCKM
     s = KLU_mult_size_t (n, sizeof (Entry), &ok) ;
     n3 = KLU_mult_size_t (n, 3 * sizeof (Entry), &ok) ;
     b6 = KLU_mult_size_t (maxblock, 6 * sizeof (Int), &ok) ;
     Numeric->worksize = KLU_add_size_t (s, MAX (n3, b6), &ok) ;
     
-#ifndef BLOCKM
     Numeric->Work = KLU_malloc (Numeric->worksize, 1, Common) ;
 #else
+    s = KLU_mult_size_t (n, 1, &ok) ;
+    n3 = KLU_mult_size_t (n, 3 * 1, &ok) ;
+    b6 = KLU_mult_size_t (maxblock, 6 * 1 , &ok) ;
+    Numeric->worksize = KLU_add_size_t (s, MAX (n3, b6), &ok) ;
+    
     Numeric->Work = KLU_B_malloc (Numeric->worksize, 1, Common) ;
 #endif
     

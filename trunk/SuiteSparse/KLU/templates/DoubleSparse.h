@@ -99,7 +99,8 @@ public:
 	  Ax = NULL;
 	  
 	  klu_defaults(&Common);
-	  
+	  Common.scale=0;
+
 	  ccs_created = false; 
 	  calculated_LU = false;
 	  calculated_Sparse_ordering = false;
@@ -118,7 +119,8 @@ public:
 	  Ax = NULL; //we still do not know the values
 	
 	  klu_defaults(&Common);
-	  
+	  Common.scale=0;
+
 	  ccs_created = false;
 	  calculated_LU = false;
 	  calculated_Sparse_ordering = false;
@@ -145,6 +147,7 @@ public:
 	  calculated_Sparse_ordering = false;
 	  
 	  klu_defaults(&Common);
+	  Common.scale=0;
       }
       
 	Sparse<double>* clone(){
@@ -162,7 +165,8 @@ public:
 		Ax = NULL; //we still do not know the values
 		
 		klu_defaults(&Common);
-	  
+	  	Common.scale=0;
+
 		ccs_created = false;
 		calculated_LU = false;
 		calculated_Sparse_ordering = false;
@@ -346,10 +350,6 @@ public:
 		Symbolic = klu_analyze(this->rows, Ap, Ai, &Common) ;
 	  }
 	  
-struct tms cstart, cend;
-double ticks_per_second = sysconf(_SC_CLK_TCK);
-
-times(&cstart);
 
 	  //Do LU factorization if not done before
 	  if(!calculated_LU){
@@ -363,10 +363,6 @@ times(&cstart);
 		std::cerr<<"Cannot do F/B substitution";
 	  }
 	  
-times(&cend);
-double cpu_total = (cend.tms_utime - cstart.tms_utime)/ticks_per_second;
-std::cout<<"Total time using blocks= "<< cpu_total <<std::endl;
-
       }
       
       

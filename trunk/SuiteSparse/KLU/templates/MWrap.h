@@ -22,6 +22,7 @@
 
 namespace BMatrix{
 
+
 template <class T>
 class MWrap{
 
@@ -29,9 +30,10 @@ private:
 	DBase<T> *A;
 
 public:
-	double scalar; //this will be needed in the REAL() operator in KLU lib. It is needed for the scaling matrix RS.
-		       //check klu_factor.cc around line 440
+	double scalar; //this will be needed in the REAL() operator in KLU lib. It is needed for the scaling matrix RS........check klu_factor.cc around line 440
 		       
+	static bool start_stealing_data; //this is used in KLU_SOLVE to steal the matrix in the case of operator= in order to avoid un-needed copying the data.
+
 	MWrap(DBase<T>*_A) : A(_A) { }
 	MWrap() : A(NULL) { }
   	~MWrap() { }
@@ -84,12 +86,17 @@ public:
 	};
 
 	virtual MWrap<T>& operator =(const MWrap<T>  &B){
-		if(!A){
-		    if (dynamic_cast<Dense<T>*>(B.A)){ 
-			A = new Dense<T>(B.A->get_number_of_rows(),B.A->get_number_of_cols());
-		    }
+
+		if(! MWrap<T>::start_stealing_data){
+			if(!A){
+		    		if (dynamic_cast<Dense<T>*>(B.A)){ 
+					A = new Dense<T>(B.A->get_number_of_rows(),B.A->get_number_of_cols());
+		    		}
+			}
+			(*A) = (**B);
+		}else{
+			A = B.A;
 		}
-		(*A) = (**B);
 		return *this;
 	};
 	
@@ -148,6 +155,9 @@ public:
 	}
 
 };
+
+template <class T> bool MWrap<T>::start_stealing_data = false;
+
 };
 
 #endif

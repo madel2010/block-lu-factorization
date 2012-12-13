@@ -43,6 +43,10 @@ Int KLU_solve
 )
 #endif
 {
+    #ifdef BLOCKM
+	Entry::start_stealing_data = true;
+    #endif
+
     Entry x [4]; 
     Entry offik;
     Entry s;
@@ -249,7 +253,7 @@ Int KLU_solve
 
                     case 1:
                         DIV (X [k1], X [k1], s) ;
-                        break ;
+			break ;
 
                     case 2:
                         DIV (X [2*k1], X [2*k1], s) ;
@@ -416,5 +420,10 @@ Int KLU_solve
 
         Bz  += d*4 ;
     }
+
+    #ifdef BLOCKM
+	Entry::start_stealing_data = false;
+    #endif
+
     return (TRUE) ;
 }
