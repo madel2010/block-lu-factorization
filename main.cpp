@@ -12,6 +12,9 @@
 #include <DoubleDense.h>
 #include <MWrap.h>
 
+#include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
 
 int main(int argc, char *argv[])
 {
@@ -81,13 +84,13 @@ int main(int argc, char *argv[])
  W3 = W1+W2;
   
 /*----------Test solve functions------------------------*/
-BMatrix::Sparse< BMatrix::Dense<double> > C(3000,3000);
-BMatrix::Sparse< double > C_double(3000,3000);
-BMatrix::Dense< BMatrix::Dense<double> > D(3000,1);
-BMatrix::Dense< double > D_double(3000,1);
+BMatrix::Sparse< BMatrix::Dense<double> > C(20000,20000);
+BMatrix::Sparse< double > C_double(20000,20000);
+BMatrix::Dense< BMatrix::Dense<double> > D(20000,1);
+BMatrix::Dense< double > D_double(20000,1);
 
 BMatrix::Dense<double> Temp(1,1);
-for(int i=0; i<3000; i++){
+for(int i=0; i<20000; i++){
   Temp.put(0,0,i+1);
   C.put(i,i,Temp); //Diagonal matrix
   C_double.put(i,i,i+1); //Diagonal matrix
@@ -100,6 +103,7 @@ for(int i=0; i<3000; i++){
 
 C.solve(D); //this replaces D
 C_double.solve(D_double); //this replaces D
+
 
 return EXIT_SUCCESS;
 }

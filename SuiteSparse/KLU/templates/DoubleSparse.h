@@ -15,6 +15,10 @@
 
 #include "klu.h"
 
+#include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
+
 namespace BMatrix{
   
 
@@ -62,7 +66,8 @@ private:
 	  Ax = new  double[nnz]; //here we are using a pointer to double, because we want Ax to just point to the value in SparseElement.value instead of doing Ax[k] = SparseElement[k].value which will invoke operator = 
 	  
 	  
-	  typename std::list<SparseElement>::iterator row_iter;
+	  //typedef typename std::list<SparseElement>::iterator row_iter;
+	  std::list<SparseElement>::iterator row_iter;
 	  int k = 0;
 	  
 
@@ -202,8 +207,9 @@ public:
 	  double result;
 	  
 	  //search column for the row
-	  typename std::list<SparseElement>::iterator row_iterator;
-	  
+	  //typename std::list<SparseElement>::iterator row_iterator;
+	  std::list<SparseElement>::iterator row_iterator;
+
 	 row_iterator = find_if( cols_lists[n].begin(), cols_lists[n].end(), std::bind2nd( FindRow(), m ) );
 	 
 	 if(row_iterator!=cols_lists[n].end()){ //we have found the row
@@ -229,8 +235,9 @@ public:
       void add(int m, int n, double value){
 	  
 	  //search column for the row in case we have added the row already
-	  typename std::list<SparseElement>::iterator row_iterator;
-	  
+	  //typename std::list<SparseElement>::iterator row_iterator;
+	  std::list<SparseElement>::iterator row_iterator;
+
 	 row_iterator = find_if( cols_lists[n].begin(), cols_lists[n].end(), std::bind2nd( FindRow(), m ) );
 	 
 	 
@@ -266,8 +273,9 @@ public:
       void put(int m, int n, double value){
 	  
 	  //search column for the row in case we have added the row already
-	  typename std::list<SparseElement>::iterator row_iterator;
-	  
+	  //typename std::list<SparseElement>::iterator row_iterator;
+	  std::list<SparseElement>::iterator row_iterator;
+
 	 row_iterator = find_if( cols_lists[n].begin(), cols_lists[n].end(), std::bind2nd( FindRow(), m ) );
 	 
 	 
@@ -304,7 +312,9 @@ public:
 		      }
 		      row_iterator++;
 		  }
-		  
+		  #include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
 		  //if we didnot find any larger row, then it means that all the rows are smaller, we have to add the new entry at the end
 		  if(!found_larger_row){
 			  SparseElement new_element; //create a new element structure
@@ -336,6 +346,11 @@ public:
 		Symbolic = klu_analyze(this->rows, Ap, Ai, &Common) ;
 	  }
 	  
+struct tms cstart, cend;
+double ticks_per_second = sysconf(_SC_CLK_TCK);
+
+times(&cstart);
+
 	  //Do LU factorization if not done before
 	  if(!calculated_LU){
 	      Numeric  = klu_factor ( Ap, Ai, Ax, Symbolic, &Common ) ;
@@ -345,7 +360,10 @@ public:
 	  //Now do the F/B substitution
 	  int result = klu_solve(Symbolic, Numeric, this->rows, Nrhs, (*RHS), &Common);	  
 
-	
+times(&cend);
+double cpu_total = (cend.tms_utime - cstart.tms_utime)/ticks_per_second;
+std::cout<<"Total time using blocks= "<< cpu_total <<std::endl;
+
       }
       
       

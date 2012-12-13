@@ -15,6 +15,10 @@
 #include "MWrap.h"
 #include "klu.h"
 
+#include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
+
 namespace BMatrix{
   
 template <class T>
@@ -365,19 +369,34 @@ public:
 		Symbolic = klu_analyze(this->rows, Ap, Ai, &Common) ;
 	  }
 	  
-	  //Do LU factorization if not done before
-	  if(!calculated_LU){
-	      Numeric  = klu_B_factor ( Ap, Ai, MWrap_Ax, Symbolic, &Common ) ;
-	  }
-	  
 	  //change RHS to MWrap
 	  BMatrix::MWrap<double>* MWrap_RHS = new  BMatrix::MWrap<double>[RHS.get_number_of_rows()];
 	  for(int i=0; i<RHS.get_number_of_rows(); i++){
 	      MWrap_RHS[i] = RHS.get_pointer(i,0);
 	  }
+
+struct tms cstart, cend;
+double ticks_per_second = sysconf(_SC_CLK_TCK);
+
+times(&cstart);
+
+
+
+	  //Do LU factorization if not done before
+	  if(!calculated_LU){
+	      Numeric  = klu_B_factor ( Ap, Ai, MWrap_Ax, Symbolic, &Common ) ;
+	  }
+	  
+	  
 	  
 	  //Now do the F/B substitution
 	  int result = klu_B_solve(Symbolic, Numeric, this->rows, Nrhs, MWrap_RHS, &Common);	  
+	  if(!result){
+		std::cerr<<"Cannot do F/B substitution";
+	  }
+times(&cend);
+double cpu_total = (cend.tms_utime - cstart.tms_utime)/ticks_per_second;
+std::cout<<"Total time using blocks= "<< cpu_total <<std::endl;
 
       }
       
