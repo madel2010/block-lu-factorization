@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 2.6)
 #if you don't want the full compiler output, remove the following line
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
-SET(CMAKE_CXX_FLAGS "-O3 -fopenmp -Wall")
-SET(CMAKE_C_FLAGS "-O3 -fopenmp -Wall")
+SET(CMAKE_CXX_FLAGS "-O0 -g -fopenmp -Wall")
+SET(CMAKE_C_FLAGS "-O0 -g -fopenmp -Wall")
 SET(LIBS gomp)
 
 SET(INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/SuiteSparse/KLU/Include 
