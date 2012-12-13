@@ -59,7 +59,8 @@ public:
 	
 	virtual DBase<T>* scale (T* val) const = 0;
 	virtual DBase<T>* solve(const DBase<T> &B) = 0;
-	
+	virtual DBase<T>* solve(DBase<T> *B) = 0;
+
 	~DBase(){
 	    if(data) delete[] data;
 	}
@@ -239,6 +240,10 @@ public:
 	}
 	
 	DBase<T>* solve(const DBase<T> &B){
+		throw std::runtime_error("Sorry: Can only solve dense<double> matrices now.");
+	}
+
+	DBase<T>* solve(DBase<T> *B){
 		throw std::runtime_error("Sorry: Can only solve dense<double> matrices now.");
 	}
 	
@@ -497,12 +502,13 @@ public:
 
 
 template<class U> std::ostream& operator<< (std::ostream &out, const Dense<U> &B){
-      out<<"["<<std::endl;
+      out<<"[";
       for(int i=0; i<B.rows; i++){
+	  if(i!=0)  out<<" ";
 	  for(int j=0; j<B.cols; j++){
 	      out<<B.data[i+B.rows*j]<<" ";
 	  }
-	  out<<std::endl;
+	  if(i!=B.rows-1)  out<<std::endl;
       }
       out<<"]";
       return out;

@@ -19,7 +19,7 @@
 int main(int argc, char *argv[])
 {
 
-  printf("Hello, world!\n");
+  /*printf("Hello, world!\n");
 
   BMatrix::Dense<double> M(3,3);
   BMatrix::Dense<double> N(3,3);
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
   
 
 
-  /*----------Test Sparse------------------------*/
+  //----------Test Sparse------------------------
 
   BMatrix::Sparse<double> A(3,3);
   A.put(0,0,1);
@@ -78,12 +78,13 @@ int main(int argc, char *argv[])
 
   //L = &C;
 
-/*----------Test BLOCK Matrices------------------------*/	
+//----------Test BLOCK Matrices------------------------	
 
  BMatrix::MWrap<double> W1(&M) , W2(&N) , W3(&Z);
  W3 = W1+W2;
   
-/*----------Test solve functions------------------------*/
+//----------Test solve functions------------------------
+*/
 BMatrix::Sparse< BMatrix::Dense<double> > C(20000,20000);
 BMatrix::Sparse< double > C_double(20000,20000);
 BMatrix::Dense< BMatrix::Dense<double> > D(20000,1);
@@ -100,10 +101,22 @@ for(int i=0; i<20000; i++){
   D_double.put(i,0,i+1);
 }
 
+clock_t start,finish;
+double time1, time2;
 
+start = clock();
 C.solve(D); //this replaces D
-C_double.solve(D_double); //this replaces D
+finish = clock();
+time1 = (double(finish)-double(start));
+std::cout<<"Time using Blocks = "<< time1/CLOCKS_PER_SEC<<std::endl;
 
+start = clock();
+C_double.solve(D_double); //this replaces D
+finish = clock();
+time2 = (double(finish)-double(start));
+std::cout<<"Time using Double = "<< time2/CLOCKS_PER_SEC<<std::endl;
+
+std::cout<<"Blocks / Double = "<< time1/time2<<std::endl;
 
 return EXIT_SUCCESS;
 }
