@@ -43,9 +43,7 @@ Int KLU_solve
 )
 #endif
 {
-    #ifdef BLOCKM
-	Entry::start_stealing_data = true;
-    #endif
+    
 
     Entry x [4]; 
     Entry offik;
@@ -231,7 +229,10 @@ Int KLU_solve
         /* ------------------------------------------------------------------ */
         /* solve X = (L*U + Off)\X */
         /* ------------------------------------------------------------------ */
-
+	#ifdef BLOCKM
+	Entry::start_stealing_data = true;
+       #endif
+	
         for (block = nblocks-1 ; block >= 0 ; block--)
         {
 
@@ -365,6 +366,10 @@ Int KLU_solve
             }
         }
 
+        #ifdef BLOCKM
+	Entry::start_stealing_data = false;
+        #endif
+	
         /* ------------------------------------------------------------------ */
         /* permute the result, Bz  = Q*X */
         /* ------------------------------------------------------------------ */
@@ -377,6 +382,7 @@ Int KLU_solve
                 for (k = 0 ; k < n ; k++)
                 {
                     Bz  [Q [k]] = X [k] ;
+
                 }
                 break ;
 
@@ -421,9 +427,7 @@ Int KLU_solve
         Bz  += d*4 ;
     }
 
-    #ifdef BLOCKM
-	Entry::start_stealing_data = false;
-    #endif
+    
 
     return (TRUE) ;
 }

@@ -898,7 +898,7 @@ SuiteSparse_long klu_zl_extract (klu_l_numeric *, klu_l_symbolic *,
 /* -------------------------------------------------------------------------- */
 
 #ifdef BLOCKM
-void* klu_B_malloc        /* returns pointer to the newly malloc'd block */
+void* klu_B_new        /* returns pointer to the newly malloc'd block */
 (
     /* ---- input ---- */
     size_t n,           /* number of items */
@@ -918,7 +918,7 @@ void *klu_malloc        /* returns pointer to the newly malloc'd block */
 ) ;
 
 #ifdef BLOCKM
-void* klu_B_free          /* always returns NULL */
+void* klu_B_delete         /* always returns NULL */
 (
     /* ---- in/out --- */
     void* p,            /* block of memory to free */

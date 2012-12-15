@@ -128,9 +128,7 @@ static void factor2
     /* factor each block using klu */
     /* ---------------------------------------------------------------------- */
 
-    #ifdef BLOCKM
-	Entry::start_stealing_data = true;
-    #endif
+    
 
     for (block = 0 ; block < nblocks ; block++)
     {
@@ -147,6 +145,10 @@ static void factor2
         if (nk == 1)
         {
 
+	      #ifdef BLOCKM
+		Entry::start_stealing_data = true;
+	      #endif
+	  
             /* -------------------------------------------------------------- */
             /* singleton case */
             /* -------------------------------------------------------------- */
@@ -227,6 +229,10 @@ static void factor2
             Pnum [k1] = P [k1] ;
             lnz++ ;
             unz++ ;
+	    
+	     #ifdef BLOCKM
+		Entry::start_stealing_data = false;
+	     #endif
 
         }
         else
@@ -248,11 +254,13 @@ static void factor2
             }
 
             /* allocates 1 arrays: LUbx [block] */
+	    
             Numeric->LUsize [block] = KLU_kernel_factor (nk, Ap, Ai, Ax, Q,
                     lsize, &LUbx [block], Udiag + k1, Llen + k1, Ulen + k1,
                     Lip + k1, Uip + k1, Pblock, &lnz_block, &unz_block,
                     X, Iwork, k1, Pinv, Rs, Offp, Offi, Offx, Common) ;
-
+	    
+	    
             if (Common->status < KLU_OK ||
                (Common->status == KLU_SINGULAR && Common->halt_if_singular))
             {
@@ -298,9 +306,7 @@ static void factor2
         }
     }
 
-    #ifdef BLOCKM
-	Entry::start_stealing_data = false;
-    #endif
+    
 
     ASSERT (nzoff == Offp [n]) ;
     PRINTF (("\n------------------- Off diagonal entries:\n")) ;
@@ -489,7 +495,7 @@ KLU_numeric *KLU_factor         /* returns NULL if error, or a valid            
 #ifndef BLOCKM
     Numeric->Offx = (Entry*) KLU_malloc (nzoff1, sizeof (Entry), Common) ;
 #else
-    Numeric->Offx = (Entry*) KLU_B_malloc (nzoff1, sizeof (Entry), Common) ;
+    Numeric->Offx = (Entry*) KLU_new (nzoff1, sizeof (Entry), Common) ;
 #endif
     
     Numeric->Lip  = (Int*) KLU_malloc (n, sizeof (Int), Common) ;
@@ -499,6 +505,7 @@ KLU_numeric *KLU_factor         /* returns NULL if error, or a valid            
 
     Numeric->LUsize = (size_t*) KLU_malloc (nblocks, sizeof (size_t), Common) ;
 
+    
     Numeric->LUbx = (void**) KLU_malloc (nblocks, sizeof (Unit *), Common) ;
 
     
@@ -513,7 +520,7 @@ KLU_numeric *KLU_factor         /* returns NULL if error, or a valid            
 #ifndef BLOCKM
     Numeric->Udiag = KLU_malloc (n, sizeof (Entry), Common) ;
 #else
-    Numeric->Udiag = KLU_B_malloc (n, sizeof (Entry), Common) ;
+    Numeric->Udiag = KLU_new (n, sizeof (Entry), Common) ;
 #endif
     
     if (Common->scale > 0)
@@ -548,7 +555,7 @@ KLU_numeric *KLU_factor         /* returns NULL if error, or a valid            
     b6 = KLU_mult_size_t (maxblock, 6 * 1 , &ok) ;
     Numeric->worksize = KLU_add_size_t (s, MAX (n3, b6), &ok) ;
     
-    Numeric->Work = KLU_B_malloc (Numeric->worksize, 1, Common) ;
+    Numeric->Work = KLU_new (Numeric->worksize, 1, Common) ;
 #endif
     
     Numeric->Xwork = Numeric->Work ;

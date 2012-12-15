@@ -94,7 +94,9 @@ BMatrix::Dense<double> Temp(1,1);
 for(int i=0; i<20000; i++){
   Temp.put(0,0,i+1);
   C.put(i,i,Temp); //Diagonal matrix
+  if(i<20000-1) C.put(i+1,i+1,Temp); //Diagonal matrix
   C_double.put(i,i,i+1); //Diagonal matrix
+  if(i<20000-1) C_double.put(i+1,i+1,i+1); //Diagonal matrix
   
   //RHS
   D.put(i,0,Temp);
@@ -117,6 +119,53 @@ time2 = (double(finish)-double(start));
 std::cout<<"Time using Double = "<< time2/CLOCKS_PER_SEC<<std::endl;
 
 std::cout<<"Blocks / Double = "<< time1/time2<<std::endl;
+
+//////////////////////////
+BMatrix::Sparse< BMatrix::Dense<double> > testA(4,4);
+BMatrix::Dense< BMatrix::Dense<double> > testB(4,1);
+
+Temp.put(0,0,1);
+testA.put(0,0,Temp);
+
+Temp.put(0,0,-1);
+testA.put(0,1,Temp);
+
+Temp.put(0,0,1);
+testA.put(0,3,Temp);
+
+Temp.put(0,0,-1);
+testA.put(1,0,Temp);
+
+Temp.put(0,0,2);
+testA.put(1,1,Temp);
+
+Temp.put(0,0,-1);
+testA.put(1,2,Temp);
+
+Temp.put(0,0,-1);
+testA.put(2,1,Temp);
+
+Temp.put(0,0,2);
+testA.put(2,2,Temp);
+
+Temp.put(0,0,1);
+testA.put(3,0,Temp);
+
+Temp.put(0,0,0);
+testB.put(0,0,Temp);
+
+Temp.put(0,0,0);
+testB.put(1,0,Temp);
+
+Temp.put(0,0,0);
+testB.put(2,0,Temp);
+
+Temp.put(0,0,1);
+testB.put(3,0,Temp);
+
+std::cout<<testA<<std::endl;
+testA.solve(testB);
+std::cout<<testB<<std::endl;
 
 return EXIT_SUCCESS;
 }

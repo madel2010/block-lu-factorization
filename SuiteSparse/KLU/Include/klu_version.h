@@ -143,8 +143,8 @@
 #define KLU_flops klu_B_flops
 
 //these functions are used because we have to allocate the pointers to Entry using new not malloc. 
-#define KLU_B_free klu_B_free  
-#define KLU_B_malloc klu_B_malloc
+#define KLU_delete klu_B_delete 
+#define KLU_new klu_B_new
 
 
 ////End: Block Lu functions///////////

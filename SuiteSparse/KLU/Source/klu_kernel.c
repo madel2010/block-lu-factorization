@@ -326,6 +326,8 @@ static void lsolve_numeric
     Int *Li ;
     Int p, s, j, jnew, len ;
 
+    
+	
     /* solve Lx=b */
     for (s = top ; s < n ; s++)
     {
@@ -342,6 +344,7 @@ static void lsolve_numeric
             MULT_SUB (X [Li [p]], Lx [p], xj) ;
         }
     }
+    
 }
 
 
@@ -774,7 +777,7 @@ size_t KLU_kernel   /* final size of LU on output */
             newlusize = memgrow * lusize + 2*n + 1 ;
             /* Future work: retry mechanism in case of malloc failure */
 	    #ifdef BLOCKM
-		LU = static_cast<Entry*>(KLU_realloc (newlusize, lusize, sizeof (Unit), LU, Common)) ;
+		//LU = static_cast<Entry*>(KLU_realloc (newlusize, lusize, sizeof (Unit), LU, Common)) ;
 	    #else
 		LU = KLU_realloc (newlusize, lusize, sizeof (Unit), LU, Common) ;
  	    #endif
@@ -846,8 +849,14 @@ size_t KLU_kernel   /* final size of LU on output */
         /* ------------------------------------------------------------------ */
         /* compute the numerical values of the kth column (s = L \ A (:,k)) */
         /* ------------------------------------------------------------------ */
-
+	   
+	#ifdef BLOCKM
+	  Entry::start_stealing_data = true;
+	#endif
         lsolve_numeric (Pinv, LU, Stack, Lip, top, n, Llen, X) ;
+	#ifdef BLOCKM
+	  Entry::start_stealing_data = false;
+	#endif 
 
 #ifndef NDEBUG
         for (p = top ; p < n ; p++)
@@ -907,6 +916,10 @@ size_t KLU_kernel   /* final size of LU on output */
         Ulen [k] = n - top ;
 
         /* extract Stack [top..n-1] to Ui and the values to Ux and clear X */
+	
+	#ifdef BLOCKM
+	  Entry::start_stealing_data = true;
+	#endif
         GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
         for (p = top, i = 0 ; p < n ; p++, i++)
         {
@@ -915,7 +928,11 @@ size_t KLU_kernel   /* final size of LU on output */
             Ux [i] = X [j] ;
             CLEAR (X [j]) ;
         }
-
+        #ifdef BLOCKM
+	  Entry::start_stealing_data = false;
+	#endif
+	
+	
         /* position the lu index at the starting point for next column */
         lup += UNITS (Int, Ulen [k]) + UNITS (Entry, Ulen [k]) ;
 
@@ -1011,7 +1028,7 @@ size_t KLU_kernel   /* final size of LU on output */
 
     /* this cannot fail, since the block is descreasing in size */
     #ifdef BLOCKM
-    	LU = static_cast<Entry*>(KLU_realloc (newlusize, lusize, sizeof (Unit), LU, Common)) ;
+    	//LU = static_cast<Entry*>(KLU_realloc (newlusize, lusize, sizeof (Unit), LU, Common)) ;
     #else
         LU = KLU_realloc (newlusize, lusize, sizeof (Unit), LU, Common) ;
     #endif

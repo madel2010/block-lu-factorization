@@ -191,7 +191,7 @@ klu_memory.o: ../Source/klu_memory.c
 	$(C) -c $(I) $< -o $@
 
 klu_B_memory.o: ../Source/klu_B_memory.c
-	$(CPP) -c $(I) $< -o $@
+	$(CPP) -DBLOCKM -c $(I) $< -o $@
 #-------------------------------------------------------------------------------
 
 purge: distclean
