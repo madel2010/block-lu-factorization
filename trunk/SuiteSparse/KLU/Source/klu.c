@@ -161,7 +161,7 @@ size_t KLU_kernel_factor            /* 0 if failure, size of LU if OK */
     ok = !INT_OVERFLOW (dunits) ; 
 	
     #ifdef BLOCKM
-    	LU = ok ? static_cast<Entry*>(KLU_malloc (lusize, sizeof (Unit), Common)) : NULL ;
+    	LU = ok ? (Entry*) KLU_new (lusize, sizeof (Unit), Common) : NULL ;
     #else
 	LU = ok ? KLU_malloc (lusize, sizeof (Unit), Common) : NULL ;
     #endif
@@ -179,10 +179,14 @@ size_t KLU_kernel_factor            /* 0 if failure, size of LU if OK */
     /* ---------------------------------------------------------------------- */
 
     /* with pruning, and non-recursive depth-first-search */
+    
+	
     lusize = KLU_kernel (n, Ap, Ai, Ax, Q, lusize,
             Pinv, P, &LU, Udiag, Llen, Ulen, Lip, Uip, lnz, unz,
             X, Stack, Flag, Ap_pos, Lpend,
             k1, PSinv, Rs, Offp, Offi, Offx, Common) ;
+	    
+	    
 
     /* ---------------------------------------------------------------------- */
     /* return LU factors, or return nothing if an error occurred */

@@ -398,10 +398,12 @@ public:
 		std::cerr<<"Cannot do F/B substitution";
 	  }
 
-
+	  sparse_free_numeric();
       }
       
-      
+      void sparse_free_numeric(){
+	  klu_B_free_numeric(&Numeric ,  &Common);
+      }
       
       SBase<T>* solve(const SBase<T> &B) const{
 		throw std::runtime_error("Please, code me solve(const SBase<T> &B)");

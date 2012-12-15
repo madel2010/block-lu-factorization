@@ -44,6 +44,13 @@ public:
 	      //	  A = NULL;
 	      //}
 	}
+	
+	void exchange_A(MWrap<T>& B){
+	    DBase<T>* _A = this->A;
+	    A = B.A;
+	    B.A = _A;
+	}
+	
 	//derefernce operator (*A)
 	virtual DBase<T>* operator* () const {return A;}
 

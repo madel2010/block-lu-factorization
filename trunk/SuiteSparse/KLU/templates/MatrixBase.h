@@ -37,9 +37,16 @@ public:
 	virtual void put(int m, int n, T value)=0; 
 	virtual T get(int m, int n) const=0;
 
+	virtual void put_data(T *_data){
+	      this->data = _data;
+	}
+	
+	virtual void exchange_data(DBase<T> &B)=0;
+	
 	virtual double det()=0; 
 	virtual bool is_zero()=0;
 
+	virtual T* operator*() const =0;
 	virtual DBase<T>& operator=(T val)=0;
 	virtual DBase<T>& operator/=(T val)=0;
 
@@ -132,6 +139,23 @@ public:
 		this->LU_factors = NULL;
 		
 		have_LU_factors = false;
+	}
+	
+	
+	
+	void exchange_data(DBase<T> &B){
+	      if (!dynamic_cast<Dense<T>*>(&B)) {
+		    throw std::runtime_error("Can not exchange data with non-Dense matrix");
+	      }
+	      
+	      if(this->rows!= B.get_number_of_rows() || this->cols!=B.get_number_of_cols()){
+		  throw std::runtime_error("Can not steadl data from a different size matrix");
+	      }
+		  
+	      T* _data = this->data;
+	      this->data = (*B);
+	      B.put_data(_data);
+	      
 	}
 	
 	Dense<T>& operator = (const Dense<T> &A){

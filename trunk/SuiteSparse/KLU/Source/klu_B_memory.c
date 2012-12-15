@@ -38,7 +38,7 @@
  */
 
 
-void *KLU_B_malloc        /* returns pointer to the newly malloc'd block */
+void *KLU_new        /* returns pointer to the newly malloc'd block */
 (
     /* ---- input ---- */
     size_t n,           /* number of items */
@@ -103,10 +103,10 @@ void *KLU_B_malloc        /* returns pointer to the newly malloc'd block */
  */
 
 
-void *KLU_B_free          /* always returns NULL */
+void *KLU_delete          /* always returns NULL */
 (
     /* ---- in/out --- */
-    Entry *p,            /* block of memory to free */
+    void *p,            /* block of memory to free */
     /* ---- input --- */
     size_t n,           /* size of block to free, in # of items */
     size_t size,        /* size of each item */
@@ -121,7 +121,7 @@ void *KLU_B_free          /* always returns NULL */
         /* only free the object if the pointer is not NULL */
         /* call free, or its equivalent */
         //(Common->free_memory) (p) ;
-        delete[] p;
+        delete[] (Entry*) p;
 	s = KLU_mult_size_t (MAX (1,n), size, &ok) ;
         Common->memusage -= s ;
     }

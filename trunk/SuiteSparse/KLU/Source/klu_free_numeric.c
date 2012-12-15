@@ -38,16 +38,25 @@ Int KLU_free_numeric
     {
         for (block = 0 ; block < nblocks ; block++)
         {
+#ifndef BLOCKM
             KLU_free (LUbx [block], LUsize ? LUsize [block] : 0,
                 sizeof (Unit), Common) ;
+#else
+	    KLU_delete (LUbx [block], LUsize ? LUsize [block] : 0,
+                sizeof (Unit), Common) ;	  
+#endif
+		
         }
     }
 
     KLU_free (Numeric->Pnum, n, sizeof (Int), Common) ;
     KLU_free (Numeric->Offp, n+1, sizeof (Int), Common) ;
     KLU_free (Numeric->Offi, nzoff+1, sizeof (Int), Common) ;
+#ifndef BLOCKM
     KLU_free (Numeric->Offx, nzoff+1, sizeof (Entry), Common) ;
-
+#else
+    KLU_delete (Numeric->Offx, nzoff+1, sizeof (Entry), Common) ;
+#endif
     KLU_free (Numeric->Lip,  n, sizeof (Int), Common) ;
     KLU_free (Numeric->Llen, n, sizeof (Int), Common) ;
     KLU_free (Numeric->Uip,  n, sizeof (Int), Common) ;
@@ -57,13 +66,22 @@ Int KLU_free_numeric
 
     KLU_free (Numeric->LUbx, nblocks, sizeof (Unit *), Common) ;
 
+#ifndef BLOCKM    
     KLU_free (Numeric->Udiag, n, sizeof (Entry), Common) ;
-
+#else
+    KLU_delete (Numeric->Udiag, n, sizeof (Entry), Common) ;
+#endif
+    
     KLU_free (Numeric->Rs,   n, sizeof (double), Common) ;
     KLU_free (Numeric->Pinv, n, sizeof (Int), Common) ;
 
+#ifndef BLOCKM
     KLU_free (Numeric->Work, Numeric->worksize, 1, Common) ;
-
+#else
+    KLU_delete (Numeric->Work, Numeric->worksize, 1, Common) ;
+#endif
+    
+    
     KLU_free (Numeric, 1, sizeof (KLU_numeric), Common) ;
 
     *NumericHandle = NULL ;
