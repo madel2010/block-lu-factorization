@@ -917,9 +917,7 @@ size_t KLU_kernel   /* final size of LU on output */
 
         /* extract Stack [top..n-1] to Ui and the values to Ux and clear X */
 	
-	#ifdef BLOCKM
-	  Entry::start_stealing_data = true;
-	#endif
+
         GET_POINTER (LU, Uip, Ulen, Ui, Ux, k, len) ;
         for (p = top, i = 0 ; p < n ; p++, i++)
         {
@@ -928,9 +926,7 @@ size_t KLU_kernel   /* final size of LU on output */
             Ux [i] = X [j] ;
             CLEAR (X [j]) ;
         }
-        #ifdef BLOCKM
-	  Entry::start_stealing_data = false;
-	#endif
+
 	
 	
         /* position the lu index at the starting point for next column */

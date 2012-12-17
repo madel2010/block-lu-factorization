@@ -43,14 +43,15 @@ Int KLU_solve
 )
 #endif
 {
-    
+
+  
 
     Entry x [4]; 
     Entry offik;
     Entry s;
     double rs, *Rs ;
     Entry *Offx, *X, *Bz, *Udiag ;
-    Int *Q, *R, *Pnum, *Offp, *Offi, *Lip, *Uip, *Llen, *Ulen ;
+    Int *Q, *IQ, *R, *Pnum, *Offp, *Offi, *Lip, *Uip, *Llen, *Ulen ; //Mina: IQ is added to make using pointer in permuting Bz instead of keep copying the data
     Unit **LUbx ;
     Int k1, k2, nk, k, block, pend, n, p, nblocks, chunk, nr, i ;
 
@@ -78,6 +79,7 @@ Int KLU_solve
     n = Symbolic->n ;
     nblocks = Symbolic->nblocks ;
     Q = Symbolic->Q ;
+    IQ = Symbolic->IQ ;
     R = Symbolic->R ;
 
     /* ---------------------------------------------------------------------- */
@@ -96,11 +98,8 @@ Int KLU_solve
     Ulen = Numeric->Ulen ;
     LUbx = (Unit **) Numeric->LUbx ;
 	
-    #ifdef BLOCKM
-    	Udiag = static_cast<Entry*>(Numeric->Udiag);
-    #else
-	Udiag = Numeric->Udiag ;
-    #endif
+    Udiag = (Entry*) Numeric->Udiag;
+    
 
     Rs = Numeric->Rs ;
     X = (Entry *) Numeric->Xwork ;
@@ -111,6 +110,7 @@ Int KLU_solve
     /* solve in chunks of 4 columns at a time */
     /* ---------------------------------------------------------------------- */
 
+    	
     for (chunk = 0 ; chunk < nrhs ; chunk += 4)
     {
 
@@ -123,7 +123,10 @@ Int KLU_solve
         /* ------------------------------------------------------------------ */
         /* scale and permute the right hand side, X = P*(R\B) */
         /* ------------------------------------------------------------------ */
-
+	#ifdef BLOCKM
+	Entry::start_stealing_data = true;
+        #endif
+	
         if (Rs == NULL)
         {
 
@@ -229,9 +232,8 @@ Int KLU_solve
         /* ------------------------------------------------------------------ */
         /* solve X = (L*U + Off)\X */
         /* ------------------------------------------------------------------ */
-	#ifdef BLOCKM
-	Entry::start_stealing_data = true;
-       #endif
+	
+	 
 	
         for (block = nblocks-1 ; block >= 0 ; block--)
         {
@@ -381,8 +383,12 @@ Int KLU_solve
 
                 for (k = 0 ; k < n ; k++)
                 {
+#ifdef BLOCKM
+		    (*Bz[Q [k]])->exchange_data(**X[k]);
+		    Q[IQ[k]] = Q [k];
+#else
                     Bz  [Q [k]] = X [k] ;
-
+#endif
                 }
                 break ;
 
@@ -391,8 +397,14 @@ Int KLU_solve
                 for (k = 0 ; k < n ; k++)
                 {
                     i = Q [k] ;
+#ifdef BLOCKM
+		    (*Bz[i])->exchange_data(**X[2*k]);
+		    (*Bz[i+d])->exchange_data(**X[2*k+1]);
+		    Q[IQ[k]] = i;
+#else
                     Bz  [i      ] = X [2*k    ] ;
                     Bz  [i + d  ] = X [2*k + 1] ;
+#endif
                 }
                 break ;
 
@@ -401,9 +413,16 @@ Int KLU_solve
                 for (k = 0 ; k < n ; k++)
                 {
                     i = Q [k] ;
+#ifdef BLOCKM
+		    (*Bz[i])->exchange_data(**X[3*k]);
+		    (*Bz[i+d])->exchange_data(**X[3*k+1]);
+		    (*Bz[i+d*2])->exchange_data(**X[3*k+2]);
+		    Q[IQ[k]] = i;
+#else		    
                     Bz  [i      ] = X [3*k    ] ;
                     Bz  [i + d  ] = X [3*k + 1] ;
                     Bz  [i + d*2] = X [3*k + 2] ;
+#endif
                 }
                 break ;
 
@@ -412,10 +431,18 @@ Int KLU_solve
                 for (k = 0 ; k < n ; k++)
                 {
                     i = Q [k] ;
+#ifdef BLOCKM
+		    (*Bz[i])->exchange_data(**X[4*k]);
+		    (*Bz[i+d])->exchange_data(**X[4*k+1]);
+		    (*Bz[i+d*2])->exchange_data(**X[4*k+2]);
+		    (*Bz[i+d*3])->exchange_data(**X[4*k+3]);
+		    Q[IQ[k]] = i;
+#else		
                     Bz  [i      ] = X [4*k    ] ;
                     Bz  [i + d  ] = X [4*k + 1] ;
                     Bz  [i + d*2] = X [4*k + 2] ;
                     Bz  [i + d*3] = X [4*k + 3] ;
+#endif
                 }
                 break ;
         }

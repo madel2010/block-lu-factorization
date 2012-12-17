@@ -55,8 +55,7 @@ template<> Dense<double>& Dense<double>::operator = (const Dense<double> &A){
 		//if it is a just created matrix, then create it with the same size of A
 		if(!this->data){
 		    create(A.rows,A.cols);
-		}
-		if(this->rows!=A.rows || this->cols!=A.cols){
+		}else if(this->rows!=A.rows || this->cols!=A.cols){
 		    throw std::runtime_error("Can not equate two matrices with different sizes");
 		}
 		
