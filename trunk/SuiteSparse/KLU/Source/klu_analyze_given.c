@@ -23,7 +23,7 @@ KLU_symbolic *KLU_alloc_symbolic
 )
 {
     KLU_symbolic *Symbolic ;
-    Int *P, *Q, *R ;
+    Int *P, *Q, *IQ, *R ; /*Mina: Aded IQ , required in klu_solve()*/
     double *Lnz ;
     Int nz, i, j, p, pend ;
 
@@ -106,6 +106,7 @@ KLU_symbolic *KLU_alloc_symbolic
     }
 
     Q = KLU_malloc (n, sizeof (Int), Common) ;
+    IQ = KLU_malloc (n, sizeof (Int), Common) ; //Added by mina , neede in klu_solve()
     R = KLU_malloc (n+1, sizeof (Int), Common) ;
     Lnz = KLU_malloc (n, sizeof (double), Common) ;
 
@@ -113,6 +114,7 @@ KLU_symbolic *KLU_alloc_symbolic
     Symbolic->nz = nz ;
     Symbolic->P = P ;
     Symbolic->Q = Q ;
+    /*Mina:*/ Symbolic->IQ = IQ ;
     Symbolic->R = R ;
     Symbolic->Lnz = Lnz ;
 

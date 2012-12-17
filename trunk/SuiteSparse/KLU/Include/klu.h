@@ -48,6 +48,7 @@ typedef struct
         nz,             /* # entries in input matrix */
         *P,             /* size n */
         *Q,             /* size n */
+	*IQ,		/*size n (Mina: this will be used in solve() to avoid the copy and only use pointer when permuting the result vector*/
         *R,             /* size n+1, but only R [0..nblocks] is used */
         nzoff,          /* nz in off-diagonal blocks */
         nblocks,        /* number of blocks */
@@ -66,7 +67,7 @@ typedef struct          /* 64-bit version (otherwise same as above) */
 {
     double symmetry, est_flops, lnz, unz ;
     double *Lnz ;
-    SuiteSparse_long n, nz, *P, *Q, *R, nzoff, nblocks, maxblock, ordering,
+    SuiteSparse_long n, nz, *P, *Q, *IQ, *R, nzoff, nblocks, maxblock, ordering,
         do_btf, structural_rank ;
 
 } klu_l_symbolic ;

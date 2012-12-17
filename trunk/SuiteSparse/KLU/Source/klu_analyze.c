@@ -225,6 +225,10 @@ static Int analyze_worker       /* returns KLU_OK or < 0 if error */
             ASSERT (k + k1 < n) ;
             ASSERT (Pblk [k] + k1 < n) ;
             Q [k + k1] = Qbtf [Pblk [k] + k1] ;
+	    
+	    //Mina: IQ keeps track of the indeces of Q. This is very useful in KLU_solve when we need to use pointers instead of copying data when permuting B
+	    //Using pointers saves veryy lot of time
+	    Symbolic->IQ[Qbtf [Pblk [k] + k1] ] = k + k1;
         }
         for (k = 0 ; k < nk ; k++)
         {
