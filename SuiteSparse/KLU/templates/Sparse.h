@@ -158,6 +158,8 @@ public:
 	  nnz = 0;
       }
       
+     
+      
       //copy constructor
       Sparse(const Sparse<T>&A){
 	  nnz = A.nnz;
@@ -216,7 +218,9 @@ public:
       
       SBase<T>* scale(T* val)const {}
 	
-      Sparse<T>& operator/=(T val){}
+      Sparse<T>& operator/=(T val){throw std::runtime_error("Please code me Sparse::operator/= (T val)");}
+      
+      
       
       Sparse<T>& operator=(const Sparse<T>&A){
 	  nnz = A.nnz;
@@ -415,7 +419,8 @@ public:
     		}
 	
     		const_cast<Sparse<T>&>(B).create_ccs();
-
+		const_cast<Sparse<T>*>(this)->create_ccs();
+		
     		Sparse<T> result(this->rows, this->cols);
 
     		for (int i = 0; i < this->cols; i++) {
@@ -424,23 +429,20 @@ public:
 
      			while (an < this->Ap[i+1] && bn < B.Ap[i+1]) {
         			if (this->Ai[an] == B.Ai[bn]) {
-          				result.put(this->Ai[an],i, ((*this->Ax[an]) + (*B.Ax[bn])) );
-          				an++;
-          				bn++;
-        			} else if (this->Ai[an] < this->Ai[bn]) {
-          				result.put(this->Ai[an],i, (*this->Ax[an]) );
-          				an++;
-        			}else {
-          				result.put(B.Ai[bn],i, (*B.Ax[bn]) );
-          				bn++;
-        			}
+          				result.put(this->Ai[an],i, (*(this->Ax[an]) + *(B.Ax[bn])) );
+					bn++;
+				}else  {
+				        result.put(this->Ai[an],i, *(this->Ax[an]) );
+				}
+				an++;
+				
       			}
       			while (an < this->Ap[i+1]) {
-        			result.put(this->Ai[an],i, (*this->Ax[an]) );
+        			result.put(this->Ai[an],i, *(this->Ax[an]) );
         			an++;
       			}
       			while (bn < B.Ap[i+1]) {
-        			result.put(B.Ai[bn],i, (*B.Ax[bn]) );
+        			result.put(B.Ai[bn],i, *(B.Ax[bn]) );
         			bn++;
       			}
     		}
@@ -454,7 +456,8 @@ public:
     		}
 	
     		const_cast<Sparse<T>&>(B).create_ccs();
-
+		const_cast<Sparse<T>*>(this)->create_ccs();
+		
     		Sparse<T> result(this->rows, this->cols);
 
     		for (int i = 0; i < this->rows; i++) {
@@ -463,23 +466,20 @@ public:
 
       			while (an < this->Ap[i+1] && bn < B.Ap[i+1]) {
         			if (this->Ai[an] == B.Ai[bn]) {
-          				result.put(i, this->Ai[an], ((*this->Ax[an]) - (*B.Ax[bn])) );
-          				an++;
-          				bn++;
-        			} else if (this->Ai[an] < B.Ai[bn]) {
-          				result.put(i, this->Ai[an], (*this->Ax[an]));
-          				an++;
-        			} else {
-          				result.put(i, B.Ai[bn], (*B.Ax[bn]) );
-          				bn++;
-        			}
+          				result.put(this->Ai[an],i, (*(this->Ax[an]) + *(B.Ax[bn])) );
+					bn++;
+				}else  {
+				        result.put(this->Ai[an],i, *(this->Ax[an]) );
+				}
+				an++;
+				
       			}
-     			while (an < this->Ap[i+1]) {
-        			result.put(i, this->Ai[an], (*this->Ax[an]) );
+      			while (an < this->Ap[i+1]) {
+        			result.put(this->Ai[an],i, *(this->Ax[an]) );
         			an++;
       			}
       			while (bn < B.Ap[i+1]) {
-        			result.put(i, B.Ai[bn], (*B.Ax[bn]) );
+        			result.put(B.Ai[bn],i, *(B.Ax[bn]) );
         			bn++;
       			}
     		}
@@ -646,6 +646,34 @@ public:
   		}
 	}
 
+	Dense<T> operator * (Dense<T>& B){
+	        if (this->cols != B.get_number_of_rows()) {
+			throw std::runtime_error("Can not multible Sparse*Dense with inconsistence sizes");
+		}
+
+         
+		Dense<T> result (this->rows, B.get_number_of_cols());
+
+		
+		for (int j = 0; j < B.get_number_of_cols(); j++) {	    
+			    for (int i = 0; i < this->cols; i++) {
+				  if (Ap[i] < Ap[i+1]) {
+				  int an = this->Ap[i];
+                    
+				  while (an < this->Ap[i+1]) {
+					result.add_to_entry (this->Ai[an] ,j, this->Ax[an] * B.get(i,j) );
+					an++;
+				  }
+                    
+				  
+			    }
+			}
+		}
+
+		return result;
+	}
+	
+	
 	Sparse<T>& operator *=(const Sparse<T> &A){
 		
 	
@@ -667,8 +695,39 @@ public:
   		}
 	}
 	     
-     template<class U>
-	  friend std::ostream& operator << (std::ostream &out , Sparse<U>& B);
+	Sparse<T> operator/(T val){
+		create_ccs();
+		
+		for(int i=0; i<nnz; i++){
+		    (*Ax[i]) /= val;
+		}
+	}
+	     
+	template<class U>
+	      friend std::ostream& operator << (std::ostream &out , Sparse<U>& B);
+	
+	Dense<T> operator + (BMatrix::Dense<T>& A ){
+	      if (A.get_number_of_rows() != this->rows
+		      || A.get_number_of_cols() != this->cols) {
+		  throw std::runtime_error("Can not Add Dense+Sparse with different sizes");
+	      }
+
+	      BMatrix::Dense<T> result = A;
+    
+    
+	      for (int i = 0; i < this->cols; i++) {
+		    int bn = Ap[i];
+
+	      while (bn < Ap[i+1]) {
+		    result.add_to_entry(Ai[bn] , i, (*Ax[bn]) );
+		    bn++;
+	      }
+	    }
+	    
+	    return result;
+	}
+	      
+	      
       protected:
       void runtime_error(const char* arg1);
 };
@@ -700,7 +759,7 @@ template<class U> std::ostream& operator << (std::ostream &out , Sparse<U>& B){
 } 
 
   
-  
+
   
 };
 

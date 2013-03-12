@@ -69,7 +69,10 @@ public:
 	virtual DBase<T>* solve(DBase<T> *B) = 0;
 
 	~DBase(){
-	    if(data) delete[] data;
+	    if(data){
+		delete[] data;
+		data = NULL;
+	    }
 	}
 };
 
@@ -104,6 +107,8 @@ public:
 		this->cols=n;
 		this->data = _data;
 		this->LU_factors = NULL;
+		
+		reset();
 		
 		have_LU_factors = false;
 	}
@@ -142,6 +147,11 @@ public:
 	}
 	
 	
+	void reset(){
+	      for(int i=0; i<this->rows*this->cols; i++){
+		  this->data[i] = 0;
+	      }
+	}
 	
 	void exchange_data(DBase<T> &B){
 	      if (!dynamic_cast<Dense<T>*>(&B)) {
@@ -240,9 +250,19 @@ public:
 		
 		have_LU_factors = false;
 	}
+	
+	void add_to_entry(int m, int n, T value){
+		this->data[m+this->rows*n] += value;
+		
+		have_LU_factors = false;
+	}
 
 	double det(){
 	      
+	}
+	
+	double norm(int col=0){ //col is the column to calculate the norm for
+	      throw std::runtime_error("Please code me Dense<>.norm()");
 	}
 
 	bool is_zero(){
@@ -302,8 +322,8 @@ public:
 		for(int i=0; i<n; i++){
 			for(int j=0; j<m; j++){	
 				//value = A.data[i+A.rows*j] + B.data[i+B.rows*j];
-				value = get(i,j) + B.data[i+B.rows*j];
-				results.put(i,j,value);
+				value = get(j,i) + B.data[j+B.rows*i];
+				results.put(j,i,value);
 			}
 		}
 
@@ -343,7 +363,7 @@ public:
   
   		for(int i=0; i<this->cols; i++){
 			for(int j=0; j<this->rows; j++){	
-				this->data[i+this->rows*j] += A.data[i+this->rows*j];
+				this->data[j+this->rows*i] += A.data[j+this->rows*i];
 			}
 		}
 
@@ -359,7 +379,7 @@ public:
   			}
     			for(int i=0; i<this->cols; i++){
 				for(int j=0; j<this->rows; j++){	
-					this->data[i+this->rows*j] += BB->data[i+this->rows*j];
+					this->data[j+this->rows*i] += BB->data[j+this->rows*i];
 				}
 			}
   		}else{
@@ -379,7 +399,7 @@ public:
   
   		for(int i=0; i<this->cols; i++){
 			for(int j=0; j<this->rows; j++){	
-				this->data[i+this->rows*j] -= A.data[i+this->rows*j];
+				this->data[j+this->rows*i] -= A.data[j+this->rows*i];
 			}
 		}
 
@@ -397,7 +417,7 @@ public:
 
     			for(int i=0; i<this->cols; i++){
 				for(int j=0; j<this->rows; j++){	
-					this->data[i+this->rows*j] -= BB->data[i+this->rows*j];
+					this->data[j+this->rows*i] -= BB->data[j+this->rows*i];
 				}
 			}
   		}else{

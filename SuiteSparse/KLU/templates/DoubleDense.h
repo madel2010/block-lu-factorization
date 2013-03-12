@@ -22,11 +22,13 @@
 
 extern "C" void dgetrf_( const int * M,  const int* N, double* A, const int *lda, int* ipiv, int* result );
 extern "C" void dgetrs_( const char* TRANS,  const int* N, const int* nrhs, double* A, const int *lda, int* ipiv, double* B, const int* ldb,  int* result, int tlen);
+extern "C" double dnrm2_(const int*N , double*A ,const int* incx);
 
 namespace BMatrix{
 
 /*---------------specialization for double Dense matrices (Dense<double>)-------------*/
-template<> Dense<double>::Dense(int m, int n){
+ template<> 
+ inline Dense<double>::Dense(int m, int n){
 	this->rows=m;
 	this->cols=n;
 	
@@ -39,7 +41,7 @@ template<> Dense<double>::Dense(int m, int n){
 }
 
 template<> 
-void Dense<double>::create(int m, int n){ 
+inline void Dense<double>::create(int m, int n){ 
 	this->rows=m;
 	this->cols=n;
 	
@@ -50,7 +52,8 @@ void Dense<double>::create(int m, int n){
 	have_LU_factors = false;
 }
 	
-template<> Dense<double>& Dense<double>::operator = (const Dense<double> &A){
+template<> 
+inline Dense<double>& Dense<double>::operator = (const Dense<double> &A){
 		
 		//if it is a just created matrix, then create it with the same size of A
 		if(!this->data){
@@ -67,8 +70,18 @@ template<> Dense<double>& Dense<double>::operator = (const Dense<double> &A){
 		return *this;
 }  
 	
+template<>
+inline double Dense<double>::norm(int col){ //col is the column to calculate the norm for (by default col=1) check MatrixBase.h
+	      int inc=1;
+	      int N = this->rows;
+	      
+	      double result = dnrm2_(&N, data+(this->rows*col), &inc);
+	      return result;
+}
+
 //this function finds (this)^{-1}*RHS using LU factorization and F/B subst.
-template<> Dense<double> Dense<double>::solve (double* _RHS , const int Nrhs){
+template<> 
+inline Dense<double> Dense<double>::solve (double* _RHS , const int Nrhs){
 	
 	int result;
 	int* i_piv = new int[this->rows];
@@ -100,7 +113,8 @@ template<> Dense<double> Dense<double>::solve (double* _RHS , const int Nrhs){
 	 return Dense<double>(this->rows, Nrhs , RHS);
 }
 
-template<> Dense<double> Dense<double>::solve (const Dense<double>& _RHS){
+template<> 
+inline Dense<double> Dense<double>::solve (const Dense<double>& _RHS){
 
 	int result;
 	int* i_piv = new int[this->rows];
@@ -136,7 +150,8 @@ template<> Dense<double> Dense<double>::solve (const Dense<double>& _RHS){
 }
 
 //Note: this function overrides RHS
-template<> DBase<double>* Dense<double>::solve (DBase<double>* _RHS){
+template<> 
+inline DBase<double>* Dense<double>::solve (DBase<double>* _RHS){
 
 	int result;
 	int* i_piv = new int[this->rows];
@@ -180,7 +195,8 @@ template<> DBase<double>* Dense<double>::solve (DBase<double>* _RHS){
 	
 }
 
-template<> DBase<double>*  Dense<double>::solve(const DBase<double> &B){
+template<> 
+inline DBase<double>*  Dense<double>::solve(const DBase<double> &B){
 	const Dense<double>* BB = dynamic_cast<const Dense<double>*>(&B);
     
 	if(BB){
@@ -191,7 +207,8 @@ template<> DBase<double>*  Dense<double>::solve(const DBase<double> &B){
 }
 
 //// result = inv(A)*B
-template<> Dense<double> Dense<double>::operator / (const Dense<double> &B){
+template<> 
+inline Dense<double> Dense<double>::operator / (const Dense<double> &B){
     if(this->cols!=B.rows){
       throw std::runtime_error("Can not divide two matrices with different rows and columns");
     }

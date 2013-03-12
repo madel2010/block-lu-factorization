@@ -84,6 +84,9 @@ private:
 	      
 	      
 	  }  
+	  
+	  ccs_created = true;
+	  
       }
       
       
@@ -130,9 +133,13 @@ public:
       
       //copy constructor
       Sparse(const Sparse<double>&A){
+	  create(A.rows, A.cols);
+	  
 	  nnz = A.nnz;
 	  this->rows=A.rows; //Number of rows
 	  this->cols=A.cols; //Number of cols
+	  
+	  
 	  
 	  if(A.cols > 0){
 	      for(int i=0 ; i< A.cols; i++){
@@ -236,9 +243,9 @@ public:
       }
 
       //add a  value in row m and column n to the existing value
-      void add(int m, int n, double value){
+      void add_to_entry(int m, int n, double value){
 	  
-	  //search column for the row in case we have added the row already
+	   //search column for the row in case we have added the row already
 	  //typename std::list<SparseElement>::iterator row_iterator;
 	  std::list<SparseElement>::iterator row_iterator;
 
@@ -250,22 +257,47 @@ public:
 	    
 	 }else{  //we have no value at this row. We have to add the row first
 	      row_iterator = cols_lists[n].begin();
-	      while(true){
-		  if(row_iterator->row > m){  //we have found the first row greater than the required row
+	      
+	      //if no row has been already added, then just add the row
+	      if(row_iterator==cols_lists[n].end()){
+		  SparseElement new_element; //create a new element structure
+		  new_element.row = m;  //add the row to the new element structure
+		  new_element.value = value; //add the value to the new element structure
+			 
+		  cols_lists[n].insert(row_iterator , new_element); 	 
+		  nnz++; //increase the number of non zeros in the matrix
+		  
+	      }else{
+		  bool found_larger_row = false;
+		  while(row_iterator!=cols_lists[n].end()){
+		      if(row_iterator->row > m){  //we have found the first row greater than the required row
 		    
-			 SparseElement new_element; //create a new element structure
-			 new_element.row = m;  //add the row to the new element structure
-			 new_element.value = value; //add the value to the new element structure
+			    SparseElement new_element; //create a new element structure
+			    new_element.row = m;  //add the row to the new element structure
+			    new_element.value = value; //add the value to the new element structure
 			 
-			 cols_lists[n].insert(row_iterator , new_element); 
+			    cols_lists[n].insert(row_iterator , new_element); 
 			 
-			 nnz++; //increase the number of non zeros in the matrix
+			    nnz++; //increase the number of non zeros in the matrix
 			 
-			 break;
+			    found_larger_row = true;
+			    break;
+		      }
+		      row_iterator++;
 		  }
-		  row_iterator++;
+
+		  //if we didnot find any larger row, then it means that all the rows are smaller, we have to add the new entry at the end
+		  if(!found_larger_row){
+			  SparseElement new_element; //create a new element structure
+			  new_element.row = m;  //add the row to the new element structure
+			  new_element.value = value; //add the value to the new element structure
+			 
+			  cols_lists[n].push_back(new_element); 
+			 
+			  nnz++; //increase the number of non zeros in the matrix
+		  }
 	      }
-	}
+	 }
 	 
 	 ccs_created = false;
 	 calculated_LU = false;
@@ -275,6 +307,8 @@ public:
       
       //put value in row m and column n
       void put(int m, int n, double value){
+	  
+	  if(value==0.0) return;
 	  
 	  //search column for the row in case we have added the row already
 	  //typename std::list<SparseElement>::iterator row_iterator;
@@ -316,9 +350,7 @@ public:
 		      }
 		      row_iterator++;
 		  }
-		  #include <time.h>
-#include <sys/time.h>
-#include <sys/times.h>
+
 		  //if we didnot find any larger row, then it means that all the rows are smaller, we have to add the new entry at the end
 		  if(!found_larger_row){
 			  SparseElement new_element; //create a new element structure
@@ -377,6 +409,7 @@ public:
     		}
 	
     		const_cast<Sparse<double>&>(B).create_ccs();
+		const_cast<Sparse<double>*>(this)->create_ccs();
 
     		Sparse<double> result(this->rows, this->cols);
 
@@ -387,15 +420,12 @@ public:
      			while (an < this->Ap[i+1] && bn < B.Ap[i+1]) {
         			if (this->Ai[an] == B.Ai[bn]) {
           				result.put(this->Ai[an],i, ((this->Ax[an]) + (B.Ax[bn])) );
-          				an++;
-          				bn++;
-        			} else if (this->Ai[an] < this->Ai[bn]) {
-          				result.put(this->Ai[an],i, (this->Ax[an]) );
-          				an++;
-        			}else {
-          				result.put(B.Ai[bn],i, (B.Ax[bn]) );
-          				bn++;
-        			}
+					bn++;
+				}else {
+				        result.put(this->Ai[an],i, this->Ax[an] );
+				}
+				an++;
+				
       			}
       			while (an < this->Ap[i+1]) {
         			result.put(this->Ai[an],i, (this->Ax[an]) );
@@ -416,7 +446,8 @@ public:
     		}
 	
     		const_cast<Sparse<double>&>(B).create_ccs();
-
+		const_cast<Sparse<double>*>(this)->create_ccs();
+		
     		Sparse<double> result(this->rows, this->cols);
 
     		for (int i = 0; i < this->rows; i++) {
@@ -425,23 +456,20 @@ public:
 
       			while (an < this->Ap[i+1] && bn < B.Ap[i+1]) {
         			if (this->Ai[an] == B.Ai[bn]) {
-          				result.put(i, this->Ai[an], ((this->Ax[an]) - (B.Ax[bn])) );
-          				an++;
-          				bn++;
-        			} else if (this->Ai[an] < B.Ai[bn]) {
-          				result.put(i, this->Ai[an], (this->Ax[an]));
-          				an++;
-        			} else {
-          				result.put(i, B.Ai[bn], (B.Ax[bn]) );
-          				bn++;
-        			}
+          				result.put(this->Ai[an],i, ((this->Ax[an]) - (B.Ax[bn])) );
+					bn++;
+				}else {
+				        result.put(this->Ai[an],i, this->Ax[an] );
+				}
+				an++;
+				
       			}
-     			while (an < this->Ap[i+1]) {
-        			result.put(i, this->Ai[an], (this->Ax[an]) );
+      			while (an < this->Ap[i+1]) {
+        			result.put(this->Ai[an],i, (this->Ax[an]) );
         			an++;
       			}
       			while (bn < B.Ap[i+1]) {
-        			result.put(i, B.Ai[bn], (B.Ax[bn]) );
+        			result.put(B.Ai[bn],i, (B.Ax[bn]) );
         			bn++;
       			}
     		}
@@ -590,7 +618,7 @@ public:
       			for (int p = B.Ap[i]; p < B.Ap[i+1]; p++) {
         			int j = B.Ai[p];
         			for (int q = this->Ap[j]; q < this->Ap[j+1]; q++) {
-          				result.add(this->Ai[q], i, (this->Ax[q] * B.Ax[p]));
+          				result.add_to_entry(this->Ai[q], i, (this->Ax[q] * B.Ax[p]));
         			}
       			}
     		}
@@ -608,6 +636,35 @@ public:
   		}
 	}
 
+	Dense<double> operator * (Dense<double>& B){
+	        if (this->cols != B.get_number_of_rows()) {
+			throw std::runtime_error("Can not multible Sparse*Dense with inconsistence sizes");
+		}
+
+		create_ccs();
+		
+		Dense<double> result (this->rows, B.get_number_of_cols());
+
+		
+		for (int j = 0; j < B.get_number_of_cols(); j++) {	    
+			    for (int i = 0; i < this->cols; i++) {
+				  if (Ap[i] < Ap[i+1]) {
+				  int an = this->Ap[i];
+                    
+				  while (an < this->Ap[i+1]) {
+					result.add_to_entry (this->Ai[an] ,j, this->Ax[an] * B.get(i,j) );
+					an++;
+				  }
+                    
+				  
+			    }
+			}
+		}
+
+		return result;
+	}
+	
+	
 	Sparse<double>& operator *=(const Sparse<double> &A){
 		
 	
@@ -628,15 +685,52 @@ public:
     			throw std::runtime_error("I can only handle subtraction of Sparse-Sparse");
   		}
 	}
-	     
+	
+	Sparse<double> operator/(double val)const{
+	    
+	    Sparse<double> result = *this;
+	  
+	    result.create_ccs();
+	    
+	    for(int i=0; i<nnz; i++){
+		result.Ax[i]/= val;
+	    }
+	    
+	    return result;
+	}
      
 	  friend std::ostream& operator << (std::ostream &out , Sparse<double>& B);
+
+	  Dense<double> operator + (BMatrix::Dense<double>& A){
+		  if (A.get_number_of_rows() != this->rows
+		      || A.get_number_of_cols() != this->cols) {
+			    throw std::runtime_error("Can not Add Dense+Sparse with different sizes");
+		  }
+
+		  create_ccs();
+		  
+		  BMatrix::Dense<double> result = A;
+    
+    
+		  for (int i = 0; i < this->cols; i++) {
+		      int bn = Ap[i];
+
+		      while (bn < Ap[i+1]) {
+			    result.add_to_entry(Ai[bn] , i, Ax[bn] );
+			    bn++;
+		      }
+		  }
+		  
+		  return result;
+	  }
+
+	      
       protected:
       void runtime_error(const char* arg1);
 };
   
   
-std::ostream& operator << (std::ostream &out , Sparse<double>& B){
+inline std::ostream& operator << (std::ostream &out , Sparse<double>& B){
 
       const_cast<Sparse<double>&>(B).create_ccs();
       
@@ -662,7 +756,7 @@ std::ostream& operator << (std::ostream &out , Sparse<double>& B){
 } 
 
   
-  
+
   
 };
 
