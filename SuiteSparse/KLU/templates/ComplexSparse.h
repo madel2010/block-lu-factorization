@@ -173,7 +173,7 @@ public:
 	  cols_lists = new std::list<SparseElement>[n];
 	  first_row = new int[n];
 	  last_row = new int[n];
-	  memset(first_row, m , n*sizeof(int));
+	  memset(first_row, -1 , n*sizeof(int));
 	  memset(last_row, -1 , n*sizeof(int));
 	  Last_accessed_ele_in_col = new std::list<SparseElement>::iterator[n];
 	  
@@ -211,8 +211,10 @@ public:
 	  cols_lists = new std::list<SparseElement>[n];
 	  first_row = new int[n];
 	  last_row = new int[n];
-	  memset(first_row, -1 , n*sizeof(int));
-	  memset(last_row, -1 , n*sizeof(int));
+	  
+	  memcpy(this->first_row , A.first_row , n*sizeof(int));
+	  memcpy(this->last_row , A.last_row , n*sizeof(int));
+	  
 	  Last_accessed_ele_in_col = new std::list<SparseElement>::iterator[n];
 
 	  Ap = new int[n+1]; //We know that Ap is always (columns_no+1)
@@ -227,12 +229,11 @@ public:
 	  this->cols=A.cols; //Number of cols
 	  
 	  
+	  for(int i=0 ; i< A.cols; i++){
+	      cols_lists[i] = A.cols_lists[i];
+	      Last_accessed_ele_in_col[i] =  cols_lists[i].begin(); 
+	  }
 	  
-	  if(A.cols > 0){
-	      for(int i=0 ; i< A.cols; i++){
-		  cols_lists[i] = A.cols_lists[i];
-	      }
-	  }  
 	  
 	  //TODO copy the CCS structure as well
 	  ccs_created = false;
@@ -266,8 +267,10 @@ public:
 	  cols_lists = new std::list<SparseElement>[n];
 	  first_row = new int[n];
 	  last_row = new int[n];
-	  memset(first_row, m , n*sizeof(int));
-	  memset(last_row, -1 , n*sizeof(int));
+	  
+	  memcpy(this->first_row , A.first_row , n*sizeof(int));
+	  memcpy(this->last_row , A.last_row , n*sizeof(int));
+	  
 	  Last_accessed_ele_in_col = new std::list<SparseElement>::iterator[n];
 	  	  
 
@@ -284,24 +287,21 @@ public:
 	  this->cols=A.cols; //Number of cols
 
 
-	  if(A.cols > 0){
-	      std::list<Sparse<double>::SparseElement>::iterator row_iter;
-	      for(int i=0 ; i< A.cols; i++){
-		        for(row_iter = (A.cols_lists[i]).begin(); row_iter!=(A.cols_lists[i]).end(); row_iter++){
-		  		SparseElement new_element; //create a new element structure
-		  		new_element.row = row_iter->row;  //add the row to the new element structure
-		  		new_element.value = row_iter->value; ; //add the value to the new element structure
+          std::list<Sparse<double>::SparseElement>::iterator row_iter;
+          for(int i=0 ; i< A.cols; i++){
+	        for(row_iter = (A.cols_lists[i]).begin(); row_iter!=(A.cols_lists[i]).end(); row_iter++){
+	  		SparseElement new_element; //create a new element structure
+	  		new_element.row = row_iter->row;  //add the row to the new element structure
+	  		new_element.value = row_iter->value; ; //add the value to the new element structure
 			 
-		  		cols_lists[i].push_back(new_element); 
+	  		cols_lists[i].push_back(new_element); 
 
-				if(row_iter->row > last_row[i]){
-					last_row[i] = row_iter->row;
-				}else if(row_iter->row < first_row[i]){
-					first_row[i] = row_iter->row;
-				}	
-	      		}
-	      }
-	  }  
+			
+		}
+		
+		Last_accessed_ele_in_col[i] = cols_lists[i].begin(); 
+	   }
+	   
 	  
 	  //TODO copy the CCS structure as well
 	  ccs_created = false;
@@ -323,16 +323,19 @@ public:
 	  number_of_klu_refactor = 0;
       }
       
-	      //copy constructor to convert dense to sparse
+       //convert dense to sparse
        Sparse(const Dense<std::complex<double> >&A){
 	  int n = A.get_number_of_cols();	
 	  int m = A.get_number_of_rows();
 
 	  cols_lists = new std::list<SparseElement>[n];
+	  
 	  first_row = new int[n];
 	  last_row = new int[n];
-	  memset(first_row, m , n*sizeof(int));
+
+	  memset(first_row, -1 , n*sizeof(int));
 	  memset(last_row, -1 , n*sizeof(int));
+
 	  Last_accessed_ele_in_col = new std::list<SparseElement>::iterator[n];
 	  	  
 
@@ -344,29 +347,30 @@ public:
 	  matrix_created = true;
 	  
 	  nnz = 0;
-	  if(A.get_number_of_cols() > 0){
-	      for(int i=0 ; i< A.get_number_of_cols(); i++){
-		  for (int j=0;j<A.get_number_of_rows(); j++){
-				std::complex<double> value = A.get(j,i);
-				if(value!=0.0){
-		        		SparseElement new_element; //create a new element structure
-		  			new_element.row = j;  //add the row to the new element structure
-		  			new_element.value = value;  //add the value to the new element structure
-			 		cols_lists[i].push_back(new_element); 	
+
+	  for(int i=0 ; i< A.get_number_of_cols(); i++){
+	      for (int j=0;j<A.get_number_of_rows(); j++){
+			std::complex<double> value = A.get(j,i);
+			if(value!=0.0){
+	        		SparseElement new_element; //create a new element structure
+	  			new_element.row = j;  //add the row to the new element structure
+	  			new_element.value = value;  //add the value to the new element structure
+		 		cols_lists[i].push_back(new_element); 	
 
 					
-					if(j> last_row[i]){
-						last_row[i] = j;
-					}else if(j < first_row[i]){
-						first_row[i] = j;
-					}
-		
-					nnz++;
+				if(j> last_row[i]){
+					last_row[i] = j;
+				}else if(j < first_row[i]){
+					first_row[i] = j;
 				}
-	      	   }
+	
+				nnz++;
+			}
 	      }
+	      Last_accessed_ele_in_col[i] = cols_lists[i].begin();
+	  }
 
-	  }  
+	  
 	  
 	  //TODO copy the CCS structure as well
 	  ccs_created = false;
@@ -439,6 +443,9 @@ public:
 	Ai = NULL;
 	if(Ax) delete[] Ax;	
 
+	if(cols_lists)	delete[] cols_lists;
+	cols_lists = NULL;
+
 	if(first_row) delete[] first_row;
 	first_row = NULL;
         
@@ -460,7 +467,7 @@ public:
       SBase<std::complex<double> >* scale(std::complex<double>* val)const {}
 	
       
-      
+      //operator =
       Sparse<std::complex<double> >& operator=(const Sparse<std::complex<double> >&A){
 	  
 	  if(this->rows!= A.rows || this->cols!= A.cols){
@@ -474,8 +481,7 @@ public:
 	  	cols_lists = new std::list<SparseElement>[n];
 	  	first_row = new int[n];
        	  	last_row = new int[n];
-	  	memset(first_row, m , n*sizeof(int));
-	  	memset(last_row, -1 , n*sizeof(int));
+		
 		Last_accessed_ele_in_col = new std::list<SparseElement>::iterator[n];
 
 	  	Ap = new int[n+1]; //We know that Ap is always (columns_no+1)
@@ -486,15 +492,19 @@ public:
 	  	matrix_created = true;
 	  }
 
+	  memcpy(this->first_row , A.first_row , n*sizeof(int));
+	  memcpy(this->last_row , A.last_row , n*sizeof(int));
+	  
 	  nnz = A.nnz;
 	  this->rows=A.rows; //Number of rows
 	  this->cols=A.cols; //Number of cols
 	  
-	  if(A.cols > 0){
-	      for(int i=0 ; i< A.cols; i++){
-		  cols_lists[i] = A.cols_lists[i];
-	      }
-	  }  
+
+	  for(int i=0 ; i< A.cols; i++){
+		cols_lists[i] = A.cols_lists[i];
+		Last_accessed_ele_in_col[i] = cols_lists[i].begin();
+	  }
+	  
 	  
 	  //TODO copy the CCS structure as well
 	  ccs_created = false; //for now we just make the new object create the CCS
@@ -506,7 +516,15 @@ public:
       
       //Get a value at row m and column n
       std::complex<double> get(int m, int n) const{
+	  
+	  //check if the row of the new value is greater/less than the last/first row we have already added
+	  if(m > last_row[n] || m < first_row[n] || nnz=0){
+		return 0.0;
+	  }
+	  
+	  
 	  std::complex<double> result;
+	  
 	  
 	  //search column for the row
 	  //typename std::list<SparseElement>::iterator row_iterator;
@@ -542,8 +560,26 @@ public:
 	  
 	   if(real(value)==0.0 && imag(value)==0.0) return;
 	  
-	  //check if the row of the new value is greater than the last row we have already added
-	  if(m > last_row[n]){
+	  //check if this is the first element
+	  if(nnz==0){
+	        SparseElement new_element; //create a new element structure
+		new_element.row = m;  //add the row to the new element structure
+		new_element.value = value; //add the value to the new element structure
+			 
+		cols_lists[n].push_back(new_element); 	 
+		nnz++; //increase the number of non zeros in the matrix	
+
+		last_row[n] = m;
+		first_row[n] = m;
+		
+		Last_accessed_ele_in_col[n] = --cols_lists[n].end() ;
+
+		structure_has_changed = true;
+		ccs_created = false;
+	
+		return ;
+	  //check if the row of the new value is greater than the last row we have already added	
+	  }else if(m > last_row[n]){
 		SparseElement new_element; //create a new element structure
 		new_element.row = m;  //add the row to the new element structure
 		new_element.value = value; //add the value to the new element structure
@@ -646,8 +682,26 @@ public:
 	  
 	  if(real(value)==0.0 && imag(value)==0.0) return;
 	  
-	  //check if the row of the new value is greater than the last row we have already added
-	  if(m > last_row[n]){
+	  //check if this is the first element
+	  if(nnz==0){
+	        SparseElement new_element; //create a new element structure
+		new_element.row = m;  //add the row to the new element structure
+		new_element.value = value; //add the value to the new element structure
+			 
+		cols_lists[n].push_back(new_element); 	 
+		nnz++; //increase the number of non zeros in the matrix	
+
+		last_row[n] = m;
+		first_row[n] = m;
+		
+		Last_accessed_ele_in_col[n] = --cols_lists[n].end() ;
+
+		structure_has_changed = true;
+		ccs_created = false;
+	
+		return ;
+	  //check if the row of the new value is greater than the last row we have already added	
+	  }else if(m > last_row[n]){
 		SparseElement new_element; //create a new element structure
 		new_element.row = m;  //add the row to the new element structure
 		new_element.value = value; //add the value to the new element structure
@@ -828,35 +882,18 @@ public:
 			throw std::runtime_error("Can not add two sparse matrices with different sizes");
     		}
 	
-    		const_cast<Sparse<std::complex<double> >&>(B).create_ccs();
-		const_cast<Sparse<std::complex<double> >*>(this)->create_ccs();
-
-    		Sparse<std::complex<double> > result(this->rows, this->cols);
-
-    		for (int i = 0; i < this->cols; i++) {
-      			int an = this->Ap[i];
-      			int bn = B.Ap[i];
-
-     			while (an < this->Ap[i+1] && bn < B.Ap[i+1]) {
-        			if (this->Ai[an] == B.Ai[bn]) {
-          				result.put(this->Ai[an],i, ((this->Ax[an]) + (B.Ax[bn])) );
-					bn++;
-				}else {
-				        result.put(this->Ai[an],i, this->Ax[an] );
-				}
-				an++;
-				
-      			}
-      			while (an < this->Ap[i+1]) {
-        			result.put(this->Ai[an],i, (this->Ax[an]) );
-        			an++;
-      			}
-      			while (bn < B.Ap[i+1]) {
-        			result.put(B.Ai[bn],i, (B.Ax[bn]) );
-        			bn++;
-      			}
-    		}
-  
+    		Sparse<double > result = *this;
+		
+		if(B.nnz>0){
+		    std::list<SparseElement>::iterator B_cols_lists_iter;
+		
+		    for (int i = 0; i < B.cols; i++) {
+			for(B_cols_lists_iter = B.cols_lists[i].begin(); B_cols_lists_iter!=B.cols_lists[i].end(); B_cols_lists_iter++){
+			    result.add_to_entry(B_cols_lists_iter->row , i , B_cols_lists_iter->value);
+			}
+		    }
+		}
+	
     		return result;
       }
 
@@ -865,35 +902,18 @@ public:
 			throw std::runtime_error("Can not add two sparse matrices with different sizes");
     		}
 	
-    		const_cast<Sparse<std::complex<double> >&>(B).create_ccs();
-		const_cast<Sparse<std::complex<double> >*>(this)->create_ccs();
+    		Sparse<double > result = *this;
 		
-    		Sparse<std::complex<double> > result(this->rows, this->cols);
-
-    		for (int i = 0; i < this->rows; i++) {
-      			int an = this->Ap[i];
-      			int bn = B.Ap[i];
-
-      			while (an < this->Ap[i+1] && bn < B.Ap[i+1]) {
-        			if (this->Ai[an] == B.Ai[bn]) {
-          				result.put(this->Ai[an],i, ((this->Ax[an]) - (B.Ax[bn])) );
-					bn++;
-				}else {
-				        result.put(this->Ai[an],i, this->Ax[an] );
-				}
-				an++;
-				
-      			}
-      			while (an < this->Ap[i+1]) {
-        			result.put(this->Ai[an],i, (this->Ax[an]) );
-        			an++;
-      			}
-      			while (bn < B.Ap[i+1]) {
-        			result.put(B.Ai[bn],i, (B.Ax[bn]) );
-        			bn++;
-      			}
-    		}
-  
+		if(B.nnz>0){
+		    std::list<SparseElement>::iterator B_cols_lists_iter;
+		
+		    for (int i = 0; i < B.cols; i++) {
+			for(B_cols_lists_iter = B.cols_lists[i].begin(); B_cols_lists_iter!=B.cols_lists[i].end(); B_cols_lists_iter++){
+			    result.add_to_entry(B_cols_lists_iter->row , i , -1*B_cols_lists_iter->value);
+			}
+		    }
+		}
+	
     		return result;
       }
       
@@ -903,28 +923,13 @@ public:
 		throw std::runtime_error("Can not subtract two sparse matrices with different sizes");
 	    }
 	
-	    create_ccs();
-            const_cast<Sparse<std::complex<double> >&>(A).create_ccs();
-
-
-	    for (int i = 0; i < A.rows; i++) {
-		  int an = Ap[i];
-		  int bn = A.Ap[i];
-
-		  while (an < Ap[i+1] && bn < A.Ap[i+1]) {
-		      if (Ai[an] == A.Ai[bn]) {
-			  put(i, Ai[an], (Ax[an]) - (A.Ax[bn]));
-			  an++;
-			  bn++;
-		      }else {
-			  put(i, A.Ai[bn], (A.Ax[bn]));
-			  bn++;
-		      }
-		  }
-	   
-		  while (bn < A.Ap[i+1]) {
-			put(i, A.Ai[bn], (A.Ax[bn]));
-			bn++;
+	   if(A.nnz>0){
+		  std::list<SparseElement>::iterator A_cols_lists_iter;
+		
+		  for (int i = 0; i < A.cols; i++) {
+		      for(A_cols_lists_iter = A.cols_lists[i].begin(); A_cols_lists_iter!=A.cols_lists[i].end(); A_cols_lists_iter++){
+			    add_to_entry(A_cols_lists_iter->row , i , -1*A_cols_lists_iter->value);
+			}
 		  }
 	    }
   
@@ -948,35 +953,21 @@ public:
       
       Sparse<std::complex<double> >& operator+=(const Sparse<std::complex<double> > &A){
 	    if(this->rows!=A.rows || this->cols!=A.cols){
-		throw std::runtime_error("Can not subtract two sparse matrices with different sizes");
+		throw std::runtime_error("Can not add two sparse matrices with different sizes");
 	    }
 	
-	    create_ccs();
-	    const_cast<Sparse<std::complex<double> >&>(A).create_ccs();
+	    if(A.nnz>0){  
+		std::list<SparseElement>::iterator A_cols_lists_iter;
 
-
-	    for (int i = 0; i < A.rows; i++) {
-		  int an = Ap[i];
-		  int bn = A.Ap[i];
-
-		  while (an < Ap[i+1] && bn < A.Ap[i+1]) {
-		      if (Ai[an] == A.Ai[bn]) {
-			  put(i, Ai[an], ((Ax[an]) + A.Ax[bn]) );
-			  an++;
-			  bn++;
-		      }else {
-			  put(i, A.Ai[bn], A.Ax[bn] );
-			  bn++;
-		      }
-		  }
-	   
-		  while (bn < A.Ap[i+1]) {
-			put(i, A.Ai[bn], A.Ax[bn] );
-			bn++;
-		  }
+		for (int i = 0; i < A.cols; i++) {
+		    for(A_cols_lists_iter=A.cols_lists[i].begin();A_cols_lists_iter!=A.cols_lists[i].end(); A_cols_lists_iter++) {
+			  add_to_entry(A_cols_lists_iter->row , i, A_cols_lists_iter->value );
+		    }  
+		}
 	    }
   
 	    return *this;
+
       }
      
       SBase<std::complex<double> >& operator +=(const SBase<std::complex<double> > &A){
@@ -1126,16 +1117,18 @@ public:
 	  
 	      std::list<SparseElement>::iterator row_iterator;
 
-	      for(int col=0; col< this->cols; col++){
-	    	  for(row_iterator= this->cols_lists[col].begin() ; row_iterator!=this->cols_lists[col].end(); row_iterator++){
+	      if(nnz>0){
+		  for(int col=0; col< this->cols; col++){
+		      for(row_iterator= this->cols_lists[col].begin() ; row_iterator!=this->cols_lists[col].end(); row_iterator++){
 			
-			SparseElement new_element;
-			new_element.row = row_iterator->row;
-			new_element.value = row_iterator->value*val;
+			    SparseElement new_element;
+			    new_element.row = row_iterator->row;
+			    new_element.value = row_iterator->value*val;
 
-			result.cols_lists[col].push_back( new_element);
-			result.nnz++;
-	    	  }
+			    result.cols_lists[col].push_back( new_element);
+			    result.nnz++;
+		      }
+		  }
 	      }
 
 	      return result;
